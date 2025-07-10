@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  git-container:
+    build: .
+    container_name: git-workspace
+    volumes:
+      - ./workspace:/workspace
+      - ./ssh-keys:/ssh-keys:ro
+      - git-data:/git-data
+    environment:
+      - GIT_AUTHOR_NAME=Git User
+      - GIT_AUTHOR_EMAIL=git@example.com
+      - GIT_COMMITTER_NAME=Git User
+      - GIT_COMMITTER_EMAIL=git@example.com
+    ports:
+      - "2222:22"  # SSH порт
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    command: ["/usr/sbin/sshd", "-D"]  # Запуск SSH демона
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./workspace:/workspace
+    restart: unless-stopped
+
+volumes:
+  git-data:
+    driver: local
+  jenkins_home:
+    driver: local 
